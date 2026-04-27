@@ -10,7 +10,7 @@
    Replace this URL with your backend Render URL after you deploy it.
    Example: https://paytest-backend.onrender.com
    ================================================================ */
-const BACKEND_URL = 'https://YOUR-BACKEND-URL.onrender.com';
+const BACKEND_URL = 'https://bae-back-end.onrender.com';
 
 const ORDER_CURRENCY = 'JOD';
 
