@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PayTest — Gateway Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ============================================================
+       CSS VARIABLES — Global Design Tokens
+       ============================================================ */
+    :root {
+      --bg:         #0d0f14;
+      --surface:    #161a23;
+      --surface2:   #1e2330;
+      --border:     #2a3040;
+      --accent:     #4f8ef7;
+      --accent-dim: #2a4f9e;
+      --green:      #22c55e;
+      --red:        #ef4444;
+      --amber:      #f59e0b;
+      --text:       #e8ecf4;
+      --muted:      #7a8499;
+      --radius:     14px;
+      --shadow:     0 4px 32px rgba(0,0,0,.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* subtle grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(79,142,247,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,15,20,.85);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--text);
+      letter-spacing: -.5px;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .badge {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      background: rgba(79,142,247,.08);
+    }
+
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 780px) {
+      main { grid-template-columns: 1fr; }
+      header { padding: 16px 20px; }
+    }
+
+    /* ============================================================
+       CARDS
+       ============================================================ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-label {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.55rem;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    /* ============================================================
+       PRODUCT CARDS (left column) — selectable
+       ============================================================ */
+    .products-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .product-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      position: relative;
+    }
+
+    .product-card:hover {
+      border-color: var(--accent-dim);
+      background: rgba(79,142,247,.05);
+    }
+
+    .product-card.selected {
+      border-color: var(--accent);
+      background: rgba(79,142,247,.08);
+      box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+    }
+
+    .product-card-icon {
+      font-size: 2rem;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .product-card-info { flex: 1; }
+
+    .product-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .product-desc {
+      font-size: .8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .product-price {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .product-check {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .product-card.selected .product-check {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .product-check::after {
+      content: '✓';
+      font-size: .65rem;
+      color: #fff;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .product-card.selected .product-check::after { opacity: 1; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: .9rem;
+      margin-bottom: 10px;
+    }
+
+    .summary-row.total {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      margin-top: 4px;
+    }
+
+    .summary-row span:first-child { color: var(--muted); }
+
+    /* ============================================================
+       FORM (right column)
+       ============================================================ */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 7px;
+      letter-spacing: .03em;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,142,247,.15);
+    }
+
+    input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+    }
+
+    .field-error {
+      font-size: .78rem;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+    }
+
+    .field-error.visible { display: block; }
+
+    /* ============================================================
+       PAYMENT FIELDS PLACEHOLDER
+       This section is where the bank SDK injects its UI
+       (card number, expiry, CVV, etc.)
+       ============================================================ */
+    .sdk-payment-fields {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 9px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .sdk-payment-fields p {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .sdk-payment-fields code {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: .78rem;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    /* The actual container the SDK will mount into */
+    #sdk-mount { min-height: 40px; }
+
+    /* ============================================================
+       PAY BUTTON
+       ============================================================ */
+    #pay-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .2s, transform .1s, box-shadow .2s;
+      box-shadow: 0 4px 20px rgba(79,142,247,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    #pay-btn:hover { background: #3a7ef6; box-shadow: 0 6px 28px rgba(79,142,247,.5); }
+    #pay-btn:active { transform: scale(.98); }
+    #pay-btn:disabled { background: var(--surface2); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+
+    #pay-btn.loading .spinner { display: block; }
+    #pay-btn.loading .btn-text { opacity: .7; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ============================================================
+       RESULT BANNER
+       ============================================================ */
+    #result-banner {
+      display: none;
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      font-size: .92rem;
+      line-height: 1.6;
+      border: 1px solid transparent;
+    }
+
+    #result-banner.success {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: rgba(34,197,94,.08);
+      border-color: rgba(34,197,94,.3);
+      color: #86efac;
+    }
+
+    #result-banner.failed {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: rgba(239,68,68,.08);
+      border-color: rgba(239,68,68,.3);
+      color: #fca5a5;
+    }
+
+    #result-banner.pending {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: rgba(245,158,11,.08);
+      border-color: rgba(245,158,11,.3);
+      color: #fcd34d;
+    }
+
+    .result-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .result-title { font-weight: 600; margin-bottom: 2px; }
+    .result-ref { font-size: .78rem; opacity: .7; margin-top: 4px; }
+
+    #retry-btn {
+      display: none;
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: border-color .2s, background .2s;
+    }
+
+    #retry-btn:hover { border-color: var(--accent); background: rgba(79,142,247,.07); }
+
+    /* ============================================================
+       TRANSACTION LOG (bottom section — spans both columns)
+       ============================================================ */
+    .log-section {
+      grid-column: 1 / -1;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .log-header h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+    }
+
+    #clear-log {
+      font-size: .78rem;
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: color .2s;
+    }
+
+    #clear-log:hover { color: var(--red); }
+
+    #log-empty {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    #log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+
+    #log-table thead th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: .75rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #log-table tbody tr { border-bottom: 1px solid rgba(255,255,255,.04); }
+    #log-table tbody tr:last-child { border-bottom: none; }
+    #log-table tbody td { padding: 13px 14px; vertical-align: middle; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+    }
+
+    .status-pill.success { background: rgba(34,197,94,.12); color: #86efac; }
+    .status-pill.failed  { background: rgba(239,68,68,.12);  color: #fca5a5; }
+    .status-pill.pending { background: rgba(245,158,11,.12); color: #fcd34d; }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: .78rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======================================================
+     HEADER
+     ====================================================== -->
+<header>
+  <div class="logo">Pay<span>Test</span></div>
+  <div class="badge">Sandbox Mode</div>
+</header>
+
+<!-- ======================================================
+     MAIN GRID
+     ====================================================== -->
+<main>
+
+  <!-- ── LEFT: Product + Order Summary ── -->
+  <div>
+    <div class="card">
+      <div class="section-label">Select a Product</div>
+
+      <!-- ================================================================
+           EDITABLE SECTION — Change product details here
+           ================================================================ -->
+      <div class="products-grid">
+
+        <!-- Product 1 -->
+        <div class="product-card selected" data-id="1" data-price="0.10" onclick="selectProduct(this)">
+          <div class="product-check"></div>
+          <div class="product-card-icon">🔑</div>
+          <div class="product-card-info">
+            <!-- 🔧 EDIT: Product name & description -->
+            <div class="product-name">API Access — Basic</div>
+            <div class="product-desc">100 API calls, sandbox tier, 24h token</div>
+          </div>
+          <!-- 🔧 EDIT: Price (must match data-price attribute above) -->
+          <div class="product-price">JOD 0.10</div>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="product-card" data-id="2" data-price="0.15" onclick="selectProduct(this)">
+          <div class="product-check"></div>
+          <div class="product-card-icon">📊</div>
+          <div class="product-card-info">
+            <div class="product-name">Analytics Snapshot</div>
+            <div class="product-desc">One-time report export, test dataset</div>
+          </div>
+          <div class="product-price">JOD 0.15</div>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="product-card" data-id="3" data-price="0.20" onclick="selectProduct(this)">
+          <div class="product-check"></div>
+          <div class="product-card-icon">⚡</div>
+          <div class="product-card-info">
+            <div class="product-name">Priority Token</div>
+            <div class="product-desc">Fast-lane queue access, single use</div>
+          </div>
+          <div class="product-price">JOD 0.20</div>
+        </div>
+
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Order summary rows — updated dynamically -->
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="display-subtotal">JOD 0.10</span>
+      </div>
+      <div class="summary-row">
+        <span>Tax (0%)</span>
+        <span>JOD 0.00</span>
+      </div>
+      <div class="divider"></div>
+      <div class="summary-row total">
+        <span>Total</span>
+        <span id="display-total">JOD 0.10</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Checkout Form ── -->
+  <div>
+    <div class="card">
+      <div class="section-label">Checkout</div>
+      <h2>Complete your order</h2>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:28px;margin-top:6px;">
+        Test environment — use sandbox credentials only.
+      </p>
+
+      <!-- Result banner (shown after payment attempt) -->
+      <div id="result-banner" role="alert">
+        <div class="result-icon" id="result-icon"></div>
+        <div>
+          <div class="result-title" id="result-title"></div>
+          <div id="result-message"></div>
+          <div class="result-ref" id="result-ref"></div>
+        </div>
+      </div>
+
+      <!-- Customer fields -->
+      <div class="form-group">
+        <label for="full-name">Full Name</label>
+        <input type="text" id="full-name" placeholder="Ahmad Al-Hassan" autocomplete="name"/>
+        <div class="field-error" id="err-name">Please enter your full name.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="ahmad@example.com" autocomplete="email"/>
+        <div class="field-error" id="err-email">Please enter a valid email address.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" placeholder="+962 7X XXX XXXX" autocomplete="tel"/>
+        <div class="field-error" id="err-phone">Please enter a valid phone number.</div>
+      </div>
+
+      <!-- ================================================================
+           PAYMENT FIELDS — SDK Mount Point
+           Replace the placeholder below when the bank's SDK is ready.
+           ================================================================ -->
+      <div class="sdk-payment-fields" id="sdk-placeholder">
+        <p>
+          <strong style="color:var(--text);">Bank SDK Payment Fields</strong><br/>
+          This box is replaced by the bank's SDK card input widget.<br/>
+          See the comment in the HTML/JS labelled<br/>
+          <code>🔧 SDK INTEGRATION POINT</code>
+        </p>
+        <!-- 🔧 SDK INTEGRATION POINT:
+             When you receive the SDK from the bank, follow these steps:
+
+             STEP 1 — Load the SDK script:
+               Add the bank's <script> tag in the <head> section above,
+               for example:
+               <script src="https://sandbox.bank.com/sdk/v1/pay.js"></script>
+
+             STEP 2 — Initialize it here or in the JS section below:
+               BankSDK.init({
+                 publicKey: 'YOUR_SANDBOX_PUBLIC_KEY_HERE',
+                 environment: 'sandbox',       // change to 'production' when going live
+                 container: '#sdk-mount',       // where the card fields appear
+                 currency: 'JOD',
+                 amount: ORDER_AMOUNT,          // defined in JS section below
+               });
+
+             STEP 3 — Call BankSDK.pay() inside the handlePayment() function
+               (see JS below). The SDK usually returns a Promise with the result.
+        -->
+        <div id="sdk-mount"></div>
+      </div>
+
+      <!-- Pay button -->
+      <button id="pay-btn" onclick="handlePayment()">
+        <div class="spinner"></div>
+        <span class="btn-text">Pay JOD 0.10</span>
+      </button>
+
+      <!-- Retry button (shown after failure) -->
+      <button id="retry-btn" onclick="resetForm()">↩ Try Again</button>
+
+      <p style="text-align:center;font-size:.75rem;color:var(--muted);margin-top:16px;">
+        🔒 Sandbox mode — no real charges are made
+      </p>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM: Transaction Log (spans both columns) ── -->
+  <div class="card log-section">
+    <div class="log-header">
+      <h3>Transaction Log</h3>
+      <button id="clear-log" onclick="clearLog()">Clear log</button>
+    </div>
+
+    <div id="log-empty">No transactions yet. Submit a test payment above.</div>
+
+    <table id="log-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Time</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Reference</th>
+        </tr>
+      </thead>
+      <tbody id="log-body"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer>
+  PayTest Demo Environment &nbsp;·&nbsp; Not for production use
+</footer>
+
+
+<!-- ======================================================
+     JAVASCRIPT — logic lives in app.js
+     ====================================================== -->
+
+<script src="app.js"></script>
+
+</body>
+</html>
