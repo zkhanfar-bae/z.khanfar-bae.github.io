@@ -1,0 +1,12 @@
+# ============================================================
+# .gitignore — files that must NEVER go to GitHub
+# ============================================================
+
+# Real credentials file — keep this local only
+.env
+
+# Node.js installed packages — Render installs these automatically
+node_modules/
+
+# Mac junk files
+.DS_Store
